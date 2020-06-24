@@ -24,6 +24,10 @@ type RenderComponent<T> = React$ComponentType<$Shape<RenderComponentProps<T>>>;
 
 type ScrollDirection = 'forward' | 'backward';
 
+type onBeforeItemsRenderCallback = ({
+  startIndex: number,
+  stopIndex: number,
+}) => void;
 type onItemsRenderedCallback = ({
   overscanStartIndex: number,
   overscanStopIndex: number,
@@ -69,6 +73,7 @@ export type Props<T> = {|
   itemKey?: (index: number, data: T) => any,
   itemSize: itemSize,
   layout: Layout,
+  onBeforeItemsRender?: onBeforeItemsRenderCallback,
   onItemsRendered?: onItemsRenderedCallback,
   onScroll?: onScrollCallback,
   outerRef?: any,
@@ -317,6 +322,9 @@ export default function createListComponent({
         : this._onScrollVertical;
 
       const [startIndex, stopIndex] = this._getRangeToRender();
+      if (typeof this.props.onBeforeItemsRender === 'function') {
+        this._callOnBeforeItemsRender(startIndex, stopIndex);
+      }
 
       const items = [];
       if (itemCount > 0) {
@@ -368,6 +376,21 @@ export default function createListComponent({
         })
       );
     }
+
+    _callOnBeforeItemsRender: (
+      startIndex: number,
+      stopIndex: number,
+    ) => void;
+    _callOnBeforeItemsRender = memoizeOne(
+      (
+        startIndex: number,
+        stopIndex: number
+      ) =>
+        ((this.props.onBeforeItemsRender: any): onBeforeItemsRenderCallback)({
+          startIndex,
+          stopIndex,
+        })
+    );
 
     _callOnItemsRendered: (
       overscanStartIndex: number,
